@@ -29,51 +29,75 @@ public class LoanService {
 
     public Loan addLoan(Integer bookId, String username){
 
-        // find user by username
         User user = userRepository.findUserByUsername(username)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> NotFoundException.create("User not found"));
 
-        // find book
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> NotFoundException.create("Book not found"));
 
-        // check availability
         if(book.getAvailableCopies() == null || book.getAvailableCopies() <= 0){
             throw InvalidDataException.create("No available copies");
         }
 
-        // decrease number of books
-        book.setAvailableCopies(book.getAvailableCopies() - 1);
-        bookRepository.save(book);
-
-        // create loan
         Loan loan = new Loan();
         loan.setBook(book);
         loan.setUser(user);
 
-        // set dates automatically
         java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
         loan.setLoanDate(today);
+        loan.setStatus("REQUESTED");
 
         java.sql.Date dueDate = new java.sql.Date(
                 System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000)
         );
         loan.setDueDate(dueDate);
-
         loan.setReturnDate(null);
 
         return loanRepository.save(loan);
     }
 
-    public Loan returnBook(Integer loanId){
+    public Loan approveLoan(Integer loanId){
 
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> NotFoundException.create("Loan not found"));
 
-        if(loan.getReturnDate() != null){
-            throw InvalidDataException.create("Book already returned");
+        if(!loan.getStatus().equals("REQUESTED")){
+            throw InvalidDataException.create("Loan not in REQUESTED state");
+        }
+
+        Book book = loan.getBook();
+
+        if(book.getAvailableCopies() <= 0){
+            throw InvalidDataException.create("No available copies");
+        }
+
+        book.setAvailableCopies(book.getAvailableCopies() - 1);
+        bookRepository.save(book);
+
+        loan.setStatus("BORROWED");
+
+        return loanRepository.save(loan);
+    }
+
+    public Loan requestReturn(Integer loanId){
+
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> NotFoundException.create("Loan not found"));
+
+        loan.setStatus("RETURN_REQUESTED");
+
+        return loanRepository.save(loan);
+    }
+
+    public Loan approveReturn(Integer loanId){
+
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> NotFoundException.create("Loan not found"));
+
+        if(!loan.getStatus().equals("RETURN_REQUESTED")){
+            throw InvalidDataException.create("Return not requested");
         }
 
         loan.setReturnDate(new java.sql.Date(System.currentTimeMillis()));
@@ -81,6 +105,8 @@ public class LoanService {
         Book book = loan.getBook();
         book.setAvailableCopies(book.getAvailableCopies() + 1);
         bookRepository.save(book);
+
+        loan.setStatus("RETURNED");
 
         return loanRepository.save(loan);
     }
@@ -93,7 +119,6 @@ public class LoanService {
         if(!userRepository.existsById(userId)){
             throw NotFoundException.create("User not found");
         }
-
         return loanRepository.findByUserId(userId);
     }
 }

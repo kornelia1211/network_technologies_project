@@ -28,28 +28,31 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(new JWTTokenFilter(jwtTokenService), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(
-                        authorizationManagerRequestMatcherRegistry ->
-                                authorizationManagerRequestMatcherRegistry
-                                        .requestMatchers("/login").permitAll()
-                                        .requestMatchers("/test").permitAll()
+                        auth -> auth
+                                // Public endpoints
+                                .requestMatchers("/login").permitAll()
+                                .requestMatchers("/test").permitAll()
 
-                                        .requestMatchers("/loan/getAll").hasAnyRole("LIBRARIAN", "ADMIN")
-                                        .requestMatchers("/loan/user/**").hasAnyRole("READER", "LIBRARIAN", "ADMIN")
-                                        .requestMatchers("/loan/borrow").hasAnyRole("READER")
-                                        .requestMatchers("/loan/return/**").hasAnyRole("READER")
+                                // Loan endpoints
+                                .requestMatchers("/loan/borrow").hasRole("READER")
+                                .requestMatchers("/loan/request-return/**").hasRole("READER")
+                                .requestMatchers("/loan/approve/**").hasRole("LIBRARIAN")
+                                .requestMatchers("/loan/approve-return/**").hasRole("LIBRARIAN")
+                                .requestMatchers("/loan/getAll").hasAnyRole("LIBRARIAN", "ADMIN")
+                                .requestMatchers("/loan/user/**").hasAnyRole("READER", "LIBRARIAN", "ADMIN")
 
-                                        .requestMatchers("/user/**").hasAnyRole("ADMIN", "LIBRARIAN")
+                                // User management
+                                .requestMatchers("/user/**").hasAnyRole("ADMIN", "LIBRARIAN")
 
-                                        .requestMatchers("/book/add", "/book/{id}").hasAnyRole("LIBRARIAN", "ADMIN")
-                                        .requestMatchers("/book/getAll", "/book/search/title", "/book/search/author").hasAnyRole("READER", "LIBRARIAN", "ADMIN")
-                ).sessionManagement(httpSecuritySessionManagementConfigurer ->
-                        httpSecuritySessionManagementConfigurer
-                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                // Book endpoints
+                                .requestMatchers("/book/add", "/book/update/**", "/book/delete/**").hasAnyRole("LIBRARIAN", "ADMIN")
+                                .requestMatchers("/book/getAll", "/book/search/**", "/book/**").hasAnyRole("READER", "LIBRARIAN", "ADMIN")
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();
     }
-
 }
-
 //admin
 //{
 //  "username": "admin",

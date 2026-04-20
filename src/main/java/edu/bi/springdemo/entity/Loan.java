@@ -28,6 +28,9 @@ public class Loan {
     @Column
     private Date returnDate;
 
+    @Column
+    private String status; // REQUESTED, BORROWED, RETURN_REQUESTED, RETURNED
+
 
     //Getters and setters
     public Integer getLoanId() {
@@ -76,5 +79,13 @@ public class Loan {
 
     public void setReturnDate(Date returnDate) {
         this.returnDate = returnDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

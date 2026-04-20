@@ -30,7 +30,14 @@ public class UserController {
         return userService.createUser(user);
     }
 
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
+    public User updateUser(@PathVariable Integer id, @RequestBody Map<String, Object> updates){
+        return userService.updateUser(id, updates);
+    }
+
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     public void deleteUser(@PathVariable Integer id){
         userService.deleteUser(id);
     }
