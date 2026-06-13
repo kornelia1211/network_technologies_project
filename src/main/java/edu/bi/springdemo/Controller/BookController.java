@@ -57,6 +57,13 @@ public class BookController {
         return bookService.searchByAuthor(author);
     }
 
+    @GetMapping("/{id}")
+    public Book getBook(
+            @PathVariable Integer id
+    ){
+        return bookService.getBook(id);
+    }
+
     @ExceptionHandler(InvalidDataException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleInvalidData(InvalidDataException e){

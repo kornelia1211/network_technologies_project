@@ -60,6 +60,13 @@ public class UserController {
         );
     }
 
+    @GetMapping("/id/{id}")
+    public User getUser(
+            @PathVariable Integer id
+    ){
+        return userService.getUser(id);
+    }
+
     @ExceptionHandler(UserDoesNotExistException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleUserException(UserDoesNotExistException e){

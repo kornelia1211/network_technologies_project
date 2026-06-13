@@ -115,4 +115,14 @@ public class BookService {
         }
         return books;
     }
+
+    public Book getBook(Integer id){
+
+        return bookRepository.findById(id)
+                .orElseThrow(() ->
+                        NotFoundException.create(
+                                "Book not found"
+                        )
+                );
+    }
 }

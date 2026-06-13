@@ -142,4 +142,14 @@ public class UserService {
 
         return users;
     }
+
+    public User getUser(Integer id){
+
+        return userRepository.findById(id)
+                .orElseThrow(() ->
+                        UserDoesNotExistException.create(
+                                "User not found"
+                        )
+                );
+    }
 }
