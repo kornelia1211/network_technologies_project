@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,9 +25,12 @@ public class UserController {
         this.userService = userService;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     @PostMapping("/add")
     @ResponseStatus(code = HttpStatus.CREATED)
-    public @ResponseBody User addUser(@RequestBody User user){
+    public @ResponseBody User addUser(
+            @RequestBody User user
+    ){
         return userService.createUser(user);
     }
 
@@ -45,6 +49,15 @@ public class UserController {
     @GetMapping("/getAll")
     public @ResponseBody Iterable<User> getAllUsers(){
         return userService.getAllUsers();
+    }
+
+    @GetMapping("/me")
+    public User getCurrentUser(
+            Authentication authentication
+    ){
+        return userService.getUserByUsername(
+                authentication.getName()
+        );
     }
 
     @ExceptionHandler(UserDoesNotExistException.class)
@@ -69,5 +82,15 @@ public class UserController {
         Map<String, String> map = new HashMap<>();
         map.put("message", e.getMessage());
         return map;
+    }
+
+    @GetMapping("/search")
+    public Iterable<User> searchByUsername(
+            @RequestParam String username
+    ){
+        return userService
+                .searchByUsername(
+                        username
+                );
     }
 }

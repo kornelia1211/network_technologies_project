@@ -1,6 +1,8 @@
 package edu.bi.springdemo.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 @Entity
 public class User {
@@ -12,6 +14,10 @@ public class User {
     @Column
     private String username;
 
+    @JsonProperty(
+            access =
+                    JsonProperty.Access.WRITE_ONLY
+    )
     @Column
     private String password;
 

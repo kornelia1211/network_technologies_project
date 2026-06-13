@@ -61,6 +61,17 @@ public class LoanController {
         return loanService.getLoansByUser(userId);
     }
 
+    @GetMapping("/my")
+    @PreAuthorize("hasRole('READER')")
+    public Iterable<Loan> getMyLoans(
+            Authentication authentication
+    ){
+        return loanService.getLoansByUsername(
+                authentication.getName()
+        );
+    }
+
+
     @ExceptionHandler(InvalidDataException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleInvalidData(InvalidDataException e){

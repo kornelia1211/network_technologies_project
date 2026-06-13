@@ -6,15 +6,20 @@ import edu.bi.springdemo.exception.InvalidDataException;
 import edu.bi.springdemo.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import edu.bi.springdemo.Repositories.LoanRepository;
 
 @Service
 public class BookService {
 
     private final BookRepository bookRepository;
+    private final LoanRepository loanRepository;
 
-    @Autowired
-    public BookService(BookRepository bookRepository) {
+    public BookService(
+            BookRepository bookRepository,
+            LoanRepository loanRepository
+    ) {
         this.bookRepository = bookRepository;
+        this.loanRepository = loanRepository;
     }
 
     public Book addBook(Book book) {
@@ -69,9 +74,22 @@ public class BookService {
     }
 
     public void deleteBook(Integer id) {
+
         if (!bookRepository.existsById(id)) {
-            throw NotFoundException.create("Book not found");
+            throw NotFoundException.create(
+                    "Book not found"
+            );
         }
+
+        if (loanRepository.hasActiveLoans(id)) {
+
+            throw InvalidDataException.create(
+                    "Cannot delete book with active loans"
+            );
+        }
+
+        loanRepository.deleteByBookId(id);
+
         bookRepository.deleteById(id);
     }
 

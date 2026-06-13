@@ -121,4 +121,23 @@ public class LoanService {
         }
         return loanRepository.findByUserId(userId);
     }
+
+    public Iterable<Loan> getLoansByUsername(
+            String username
+    ){
+
+        User user = userRepository
+                .findUserByUsername(username)
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        NotFoundException.create(
+                                "User not found"
+                        )
+                );
+
+        return loanRepository.findByUserId(
+                user.getUserId()
+        );
+    }
 }

@@ -1,7 +1,9 @@
 package edu.bi.springdemo.service;
 
+import edu.bi.springdemo.Repositories.LoanRepository;
 import edu.bi.springdemo.entity.User;
 import edu.bi.springdemo.Repositories.UserRepository;
+import edu.bi.springdemo.exception.InvalidDataException;
 import edu.bi.springdemo.exception.UserAlreadyExistsException;
 import edu.bi.springdemo.exception.UserDoesNotExistException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +18,17 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final LoanRepository loanRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            LoanRepository loanRepository
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.loanRepository = loanRepository;
     }
 
     @Transactional
@@ -77,13 +85,61 @@ public class UserService {
     }
 
     public void deleteUser(Integer id){
+
         if(!userRepository.existsById(id)){
-            throw UserDoesNotExistException.create("User with id " + id + " does not exist");
+            throw UserDoesNotExistException.create(
+                    "User with id " + id +
+                            " does not exist"
+            );
         }
+
+        if (
+                loanRepository.hasActiveLoansByUser(id)
+        ) {
+            throw InvalidDataException.create(
+                    "Cannot delete user with active loans"
+            );
+        }
+
+        loanRepository.deleteByUserId(id);
+
         userRepository.deleteById(id);
     }
 
     public Iterable<User> getAllUsers(){
         return userRepository.findAll();
+    }
+
+    public User getUserByUsername(
+            String username
+    ){
+        return userRepository
+                .findUserByUsername(username)
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        UserDoesNotExistException.create(
+                                "User not found"
+                        )
+                );
+    }
+
+    public Iterable<User> searchByUsername(
+            String username
+    ){
+
+        Iterable<User> users =
+                userRepository.findUserByUsername(
+                        username
+                );
+
+        if (!users.iterator().hasNext()) {
+
+            throw UserDoesNotExistException.create(
+                    "No users found"
+            );
+        }
+
+        return users;
     }
 }

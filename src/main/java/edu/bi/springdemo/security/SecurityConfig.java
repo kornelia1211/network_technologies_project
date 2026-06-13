@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -18,41 +19,89 @@ public class SecurityConfig {
     private final JwtTokenService jwtTokenService;
 
     @Autowired
-    public SecurityConfig(JwtTokenService jwtTokenService){
+    public SecurityConfig(JwtTokenService jwtTokenService) {
         this.jwtTokenService = jwtTokenService;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http)
+            throws Exception {
+
         return http
                 .csrf(csrf -> csrf.disable())
-                .addFilterBefore(new JWTTokenFilter(jwtTokenService), UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(
-                        auth -> auth
-                                // Public endpoints
-                                .requestMatchers("/login").permitAll()
-                                .requestMatchers("/test").permitAll()
+                .cors(cors -> {})
 
-                                // Loan endpoints
-                                .requestMatchers("/loan/borrow").hasRole("READER")
-                                .requestMatchers("/loan/request-return/**").hasRole("READER")
-                                .requestMatchers("/loan/approve/**").hasRole("LIBRARIAN")
-                                .requestMatchers("/loan/approve-return/**").hasRole("LIBRARIAN")
-                                .requestMatchers("/loan/getAll").hasAnyRole("LIBRARIAN", "ADMIN")
-                                .requestMatchers("/loan/user/**").hasAnyRole("READER", "LIBRARIAN", "ADMIN")
-
-                                // User management
-                                .requestMatchers("/user/**").hasAnyRole("ADMIN", "LIBRARIAN")
-
-                                // Book endpoints
-                                .requestMatchers("/book/add", "/book/update/**", "/book/delete/**").hasAnyRole("LIBRARIAN", "ADMIN")
-                                .requestMatchers("/book/getAll", "/book/search/**", "/book/**").hasAnyRole("READER", "LIBRARIAN", "ADMIN")
+                .addFilterBefore(
+                        new JWTTokenFilter(jwtTokenService),
+                        UsernamePasswordAuthenticationFilter.class
                 )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.OPTIONS,
+                                "/**"
+                        ).permitAll()
+
+                        .requestMatchers("/login").permitAll()
+                        .requestMatchers("/test").permitAll()
+
+                        .requestMatchers("/loan/borrow")
+                        .hasRole("READER")
+
+                        .requestMatchers("/loan/request-return/**")
+                        .hasRole("READER")
+
+                        .requestMatchers("/loan/approve/**")
+                        .hasRole("LIBRARIAN")
+
+                        .requestMatchers("/loan/approve-return/**")
+                        .hasRole("LIBRARIAN")
+
+                        .requestMatchers("/loan/getAll")
+                        .hasAnyRole("LIBRARIAN", "ADMIN")
+
+                        .requestMatchers("/loan/my")
+                        .hasRole("READER")
+
+                        .requestMatchers("/loan/user/**")
+                        .hasAnyRole("READER", "LIBRARIAN", "ADMIN")
+
+                        .requestMatchers("/user/me")
+                        .hasAnyRole(
+                                "READER",
+                                "LIBRARIAN",
+                                "ADMIN"
+                        )
+
+                        .requestMatchers("/user/**")
+                        .hasAnyRole("ADMIN", "LIBRARIAN")
+
+                        .requestMatchers(
+                                "/book/add",
+                                "/book/update/**",
+                                "/book/delete/**"
+                        )
+                        .hasAnyRole("LIBRARIAN", "ADMIN")
+
+                        .requestMatchers(
+                                "/book/getAll",
+                                "/book/search/**",
+                                "/book/**"
+                        )
+                        .permitAll()
+                )
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
+                )
+
                 .build();
     }
 }
+
 //admin
 //{
 //  "username": "admin",

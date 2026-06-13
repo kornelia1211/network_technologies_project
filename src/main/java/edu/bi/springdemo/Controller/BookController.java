@@ -6,6 +6,7 @@ import edu.bi.springdemo.exception.NotFoundException;
 import edu.bi.springdemo.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -22,17 +23,20 @@ public class BookController {
         this.bookService = bookService;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     @PostMapping("/add")
     @ResponseStatus(HttpStatus.CREATED) //code 201 - means that website is successfully created
     public Book addBook(@RequestBody Book book){
         return bookService.addBook(book);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     @PatchMapping("/{id}")
     public Book updateBook(@PathVariable Integer id, @RequestBody Book book){
         return bookService.updateBook(id, book);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
     @DeleteMapping("/{id}")
     public void deleteBook(@PathVariable Integer id){
         bookService.deleteBook(id);

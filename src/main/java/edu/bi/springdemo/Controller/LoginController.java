@@ -26,10 +26,11 @@ public class LoginController {
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO) {
 
-        String token = loginService.login(
-                loginDTO.getUsername(),
-                loginDTO.getPassword()
-        );
+        String token =
+                loginService.login(
+                        loginDTO.getUsername(),
+                        loginDTO.getPassword()
+                );
 
         Map<String, String> map = new HashMap<>();
         map.put("token", token);
